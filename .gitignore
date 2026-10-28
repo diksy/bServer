@@ -1,0 +1,22 @@
+# ===== Tooling AI agent (tidak di-upload ke GitHub) =====
+AGENTS.md
+.opencode/
+.state/
+tools/
+opencode.jsonc
+
+# ===== Rahasia & env lokal =====
+secrets.local.json
+*.local.json
+.env
+
+# ===== Dependencies =====
+node_modules/
+
+# ===== Data runtime (vault terenkripsi, database, kredensial server) =====
+data/
+
+# ===== Artefak build (binary di-upload via GitHub Release, bukan di-commit) =====
+dist/
+web/dist/
+*.tsbuildinfo

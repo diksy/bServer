@@ -1,0 +1,45 @@
+services:
+  web-01:
+    image: linuxserver/openssh-server:latest
+    container_name: bserver-web-01
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Jakarta
+      - USER_NAME=bserver
+      - USER_PASSWORD=bserver123
+      - PASSWORD_ACCESS=true
+      - SUDO_ACCESS=false
+    ports:
+      - "2222:2222"
+    restart: unless-stopped
+
+  web-02:
+    image: linuxserver/openssh-server:latest
+    container_name: bserver-web-02
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Jakarta
+      - USER_NAME=bserver
+      - USER_PASSWORD=bserver123
+      - PASSWORD_ACCESS=true
+      - SUDO_ACCESS=false
+    ports:
+      - "2223:2222"
+    restart: unless-stopped
+
+  db-01:
+    image: linuxserver/openssh-server:latest
+    container_name: bserver-db-01
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Jakarta
+      - USER_NAME=bserver
+      - USER_PASSWORD=bserver123
+      - PASSWORD_ACCESS=true
+      - SUDO_ACCESS=false
+    ports:
+      - "2224:2222"
+    restart: unless-stopped
