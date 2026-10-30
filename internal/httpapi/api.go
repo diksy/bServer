@@ -215,7 +215,7 @@ func (a *API) status(w http.ResponseWriter, r *http.Request) {
 		"unlocked":     a.Vault.Unlocked(),
 		"autoLockMin":  al,
 		"theme":        theme,
-		"version":      "0.1.0-prototype",
+		"version":      "0.1.1",
 		"uptimeSec":    int64(time.Since(a.Start).Seconds()),
 		"dataDir":      a.Cfg.DataDir,
 		"sshAgentSock": os.Getenv("SSH_AUTH_SOCK") != "",

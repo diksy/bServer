@@ -15,13 +15,13 @@ for f in "$OUT"/bserver-*; do
   # sertakan README + LICENSE (bila ada) di tiap paket
   case "$name" in
     *.exe)
-      zip -j "$RELEASE/${name%.exe}-$VERSION.zip" "$f" README.bserver.md >/dev/null
+      zip -j "$RELEASE/${name%.exe}-$VERSION.zip" "$f" README.md >/dev/null
       ;;
     *)
       # tarball berisi binary + README
       tmp=$(mktemp -d)
       cp "$f" "$tmp/bserver"
-      cp README.bserver.md "$tmp/README.md"
+      cp README.md "$tmp/README.md"
       tar -C "$tmp" -czf "$RELEASE/$name-$VERSION.tar.gz" bserver README.md
       rm -rf "$tmp"
       ;;
