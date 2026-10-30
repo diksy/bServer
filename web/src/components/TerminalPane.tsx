@@ -13,9 +13,11 @@ type Props = {
   retryOnClose?: boolean;
   /** Mendaftarkan fungsi kirim input ke terminal ini (dipakai App untuk snippet). */
   onRegisterSend?: (fn: ((d: string) => void) | null) => void;
+  /** True bila tab ini sedang aktif; dipakai untuk auto-focus saat kembali terlihat. */
+  active?: boolean;
 };
 
-export default function TerminalPane({ label, sublabel, wsPath, wsParams, retryOnClose = true, onRegisterSend }: Props) {
+export default function TerminalPane({ label, sublabel, wsPath, wsParams, retryOnClose = true, onRegisterSend, active = true }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -135,6 +137,12 @@ export default function TerminalPane({ label, sublabel, wsPath, wsParams, retryO
       registerRef.current?.(null);
     };
   }, [label, sublabel, wsPath, paramsKey, retryOnClose]);
+
+  // Auto-fokus saat tab kembali aktif. Tab terminal kini tetap ter-mount saat
+  // berpindah tab, sehingga tidak ada connect ulang yang memicu term.focus().
+  useEffect(() => {
+    if (active) termRef.current?.focus();
+  }, [active]);
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>

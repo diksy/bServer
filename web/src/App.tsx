@@ -52,8 +52,9 @@ export default function App() {
   const [quickOpen, setQuickOpen] = useState(false);
   const [unacked, setUnacked] = useState(0);
   const loaded = useRef(false);
-  // Fungsi kirim ke terminal aktif (diisi TerminalPane yang sedang ter-mount).
-  const termSendRef = useRef<((d: string) => void) | null>(null);
+  // Fungsi kirim ke tiap terminal (diisi TerminalPane per tab; snippet dikirim
+  // ke terminal tab aktif).
+  const termSends = useRef<Record<string, ((d: string) => void) | undefined>>({});
 
   const toast = useCallback((msg: string, kind: Toast["kind"] = "info") => {
     const id = Date.now() + Math.random();
@@ -251,10 +252,10 @@ export default function App() {
     setStatus((s) => (s ? { ...s, unlocked: false } : s));
   }
 
-  // Kirim isi snippet ke terminal yang sedang aktif (satu-satunya yang
-  // ter-mount karena App hanya merender tab aktif).
+  // Kirim isi snippet ke terminal tab aktif (semua tab terminal tetap
+  // ter-mount; hanya satu yang terlihat).
   function runSnippet(body: string) {
-    const send = termSendRef.current;
+    const send = termSends.current[active];
     if (send) {
       send(body.endsWith("\n") ? body : body + "\n");
       toast("Snippet dikirim ke terminal", "success");
@@ -295,7 +296,7 @@ export default function App() {
   }
 
   const current = tabs.find((t) => t.id === active) ?? tabs[0];
-  const currentServer = current.serverId ? servers.find((s) => s.id === current.serverId) : undefined;
+  const serverOf = (t: Tab) => (t.serverId ? servers.find((s) => s.id === t.serverId) : undefined);
 
   return (
     <div className="app">
@@ -397,7 +398,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="tab-body" style={current.kind === "term" ? { overflow: "hidden", display: "flex", flexDirection: "column" } : undefined}>
+          <div className="tab-body" style={{ position: "relative", ...(current.kind === "term" ? { overflow: "hidden" } : {}) }}>
             {current.kind === "welcome" && (
               <Welcome
                 servers={servers}
@@ -415,27 +416,6 @@ export default function App() {
                 status={status}
               />
             )}
-            {current.kind === "term" &&
-              (current.quickId ? (
-                <TerminalPane
-                  label={current.quickLabel ?? current.title}
-                  sublabel={current.quickSublabel ?? ""}
-                  wsPath="/ws/quickterm"
-                  wsParams={{ quickId: current.quickId }}
-                  retryOnClose={false}
-                  onRegisterSend={(fn) => (termSendRef.current = fn)}
-                />
-              ) : currentServer ? (
-                <TerminalPane
-                  label={currentServer.name}
-                  sublabel={`${currentServer.username}@${currentServer.host}:${currentServer.port}`}
-                  wsPath="/ws/term"
-                  wsParams={{ serverId: currentServer.id }}
-                  onRegisterSend={(fn) => (termSendRef.current = fn)}
-                />
-              ) : (
-                <div className="empty">Server tidak ditemukan.</div>
-              ))}
             {current.kind === "batch" && <BatchPanel servers={servers} initialSelected={current.selected ?? []} toast={toast} />}
             {current.kind === "sftp" && <SftpPane servers={servers} initialServerId={current.serverId} toast={toast} />}
             {current.kind === "dash" && <Dashboard servers={servers} toast={toast} />}
@@ -453,6 +433,46 @@ export default function App() {
                 toast={toast}
               />
             )}
+            {tabs
+              .filter((t) => t.kind === "term")
+              .map((t) => {
+                const sv = serverOf(t);
+                return (
+                  <div
+                    key={t.id}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      visibility: active === t.id ? "visible" : "hidden",
+                    }}
+                  >
+                    {t.quickId ? (
+                      <TerminalPane
+                        label={t.quickLabel ?? t.title}
+                        sublabel={t.quickSublabel ?? ""}
+                        wsPath="/ws/quickterm"
+                        wsParams={{ quickId: t.quickId }}
+                        retryOnClose={false}
+                        active={active === t.id}
+                        onRegisterSend={(fn) => (termSends.current[t.id] = fn ?? undefined)}
+                      />
+                    ) : sv ? (
+                      <TerminalPane
+                        label={sv.name}
+                        sublabel={`${sv.username}@${sv.host}:${sv.port}`}
+                        wsPath="/ws/term"
+                        wsParams={{ serverId: sv.id }}
+                        active={active === t.id}
+                        onRegisterSend={(fn) => (termSends.current[t.id] = fn ?? undefined)}
+                      />
+                    ) : (
+                      <div className="empty">Server tidak ditemukan.</div>
+                    )}
+                  </div>
+                );
+              })}
           </div>
 
           <div className="statusbar">
